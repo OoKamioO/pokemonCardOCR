@@ -96,6 +96,7 @@ def getCardName(cardType):
 
     cardName = []
 
+    #Loads up dictionary for selected card type
     if cardType == 'PokemonCard':
         dictionaryPath = open('pokemonNames.txt', 'r')
     elif cardType == 'TrainerCard':
@@ -109,7 +110,7 @@ def getCardName(cardType):
     dictionaryPath.close()
 
     #Encode text into bytes
-    #See example 1 = https://docs.python.org/2.7/howto/unicode.html
+    #See example1 = https://docs.python.org/2.7/howto/unicode.html
     textRetrieved = u''.join(text).encode('utf-8').strip()
 
     print textRetrieved
@@ -122,64 +123,6 @@ def getCardName(cardType):
             break
 
     return realName
-
-def getPokemonCardName():
-    text = pytesseract.image_to_string(Image.open(filename), lang = 'eng', config = 'pokemon')
-
-    pokemonName = []
-
-    pokemonDictionaryPath = open('pokemonNames.txt', 'r')
-
-    with pokemonDictionaryPath as pokemon:
-        for line in pokemon:
-            pokemonName.append(line[:-1])
-
-    pokemonDictionaryPath.close()
-
-    #Encode text into bytes
-    #See example 1 = https://docs.python.org/2.7/howto/unicode.html
-    textRetrieved = u''.join(text).encode('utf-8').strip()
-
-    print textRetrieved
-
-    realName = ''
-
-    for i in range(0, len(pokemonName)):
-        if pokemonName[i] in textRetrieved:
-            realName = pokemonName[i]
-            break
-
-    return pokemonName, textRetrieved, realName
-
-def getTrainerCardName():
-    #Do not load the pokemon dictionary
-    text = pytesseract.image_to_string(Image.open(filename), lang = 'eng', config = '')
-
-    trainerCardName = []
-
-    #Open up trainer card data
-    trainerCardDictionaryPath = open('trainerCardsGR.txt', 'r')
-
-    with trainerCardDictionaryPath as pokemon:
-        for line in pokemon:
-            trainerCardName.append(line[:-1])
-
-    trainerCardDictionaryPath.close()
-
-    #Encode text into bytes
-    #See example 1 = https://docs.python.org/2.7/howto/unicode.html
-    textRetrieved = u''.join(text).encode('utf-8').strip()
-
-    print textRetrieved
-
-    realName = ''
-
-    for i in range(0, len(trainerCardName)):
-        if trainerCardName[i] in textRetrieved:
-            realName = trainerCardName[i]
-            break
-
-    return trainerCardName, realName
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -196,6 +139,7 @@ height, width, card = resizeCard(card)
 #Pastes the top part of the image
 image2 = card[0: height/7, 0:width]
 
+#Finds lines in the card
 h1, h2 = lineApply(image2)
 
 image = card[int(h1) + 5:int(h2), 0:width]
@@ -229,22 +173,12 @@ cv2.imwrite(filename, cleanImage)
 
 #pokemonDictionary, textRetrieved, realName = getPokemonCardName()
 
-realName = getCardName('PokemonCard')
+cardName = getCardName('PokemonCard')
 
-#if realName == '':
-#    trainerCardDictionary, realName = getTrainerCardName()
-#
-#    for i in range(0, len(trainerCardDictionary)):
-#        if trainerCardDictionary[i] in textRetrieved:
-#            realName = trainerCardDictionary[i]
-#            break
-#
-#    print 'Your card is ' + realName
+if cardName == '':
+    cardName = getCardName('TrainerCard')
 
-if realName == '':
-    realName = getCardName('TrainerCard')
-
-print 'Your card is ' + realName
+print 'Your card is ' + cardName
 
 #print(text)
 #print(text2)
