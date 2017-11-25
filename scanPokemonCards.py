@@ -96,6 +96,34 @@ def resizeCard(card):
 
     return height, width, card
 
+def getPokemonCardName():
+    text = pytesseract.image_to_string(Image.open(filename), lang = 'eng', config = 'pokemon')
+
+    pokemonName = []
+
+    pokemonDictionaryPath = open('pokemonNames.txt', 'r')
+
+    with pokemonDictionaryPath as pokemon:
+        for line in pokemon:
+            pokemonName.append(line[:-1])
+
+    pokemonDictionaryPath.close()
+
+    #Encode text into bytes
+    #See example 1 = https://docs.python.org/2.7/howto/unicode.html
+    textRetrieved = u''.join(text).encode('utf-8').strip()
+
+    print textRetrieved
+
+    realName = ''
+
+    for i in range(0, len(pokemonName)):
+        if pokemonName[i] in textRetrieved:
+            realName = pokemonName[i]
+            break
+
+    return pokemonName, textRetrieved, realName
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
@@ -142,40 +170,7 @@ filename = "{}.png".format(os.getpid())
 #cleanImage = cv2.resize(cleanImage, dsize = (width*2, height*2))
 cv2.imwrite(filename, cleanImage)
 
-#i, contours, hierarchy = cv2.findContours(cleanImage, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-
-#for contour in contours:
-    # get rectangle bounding contour
-    #[x, y, w, h] = cv2.boundingRect(contour)
-
-    # Don't plot small false positives that aren't text
-    #if w < 35 and h < 35:
-        #continue
-
-    # draw rectangle around contour on original image
-    #cv2.rectangle(cleanImage, (x, y), (x + w, y + h), (255, 0, 0), 2)
-
-#image = Image.open(filename)
-
-text = pytesseract.image_to_string(Image.open(filename), lang = 'eng', config = 'pokemon')
-
-pokemonName = []
-
-pokemonDictionaryPath = open('pokemonNames.txt', 'r')
-
-with pokemonDictionaryPath as pokemon:
-    for line in pokemon:
-        pokemonName.append(line[:-1])
-
-pokemonDictionaryPath.close()
-
-#Encode text into bytes
-#See example 1 = https://docs.python.org/2.7/howto/unicode.html
-textRetrieved = u''.join(text).encode('utf-8').strip()
-
-print textRetrieved
-
-realName = ''
+pokemonName, textRetrieved, realName = getPokemonCardName()
 
 for i in range(0, len(pokemonName)):
     if pokemonName[i] in textRetrieved:
