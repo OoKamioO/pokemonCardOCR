@@ -86,6 +86,43 @@ def resizeCard(card):
 
     return height, width, card
 
+def getCardName(cardType):
+    if cardType == 'PokemonCard':
+        #Scan text with Pokemon Dictionary on
+        text = pytesseract.image_to_string(Image.open(filename), lang = 'eng', config = 'pokemon')
+    elif cardType == 'TrainerCard':
+        #Do not load the pokemon dictionary
+        text = pytesseract.image_to_string(Image.open(filename), lang = 'eng', config = '')
+
+    cardName = []
+
+    if cardType == 'PokemonCard':
+        dictionaryPath = open('pokemonNames.txt', 'r')
+    elif cardType == 'TrainerCard':
+        dictionaryPath = open('trainerCardsGR.txt', 'r')
+
+    #Enters all entries in the dictionaries to cardName array
+    with dictionaryPath as entry:
+        for line in entry:
+            cardName.append(line[:-1])
+
+    dictionaryPath.close()
+
+    #Encode text into bytes
+    #See example 1 = https://docs.python.org/2.7/howto/unicode.html
+    textRetrieved = u''.join(text).encode('utf-8').strip()
+
+    print textRetrieved
+
+    realName = ''
+
+    for i in range(0, len(cardName)):
+        if cardName[i] in textRetrieved:
+            realName = cardName[i]
+            break
+
+    return realName
+
 def getPokemonCardName():
     text = pytesseract.image_to_string(Image.open(filename), lang = 'eng', config = 'pokemon')
 
@@ -190,24 +227,24 @@ filename = "{}.png".format(os.getpid())
 #cleanImage = cv2.resize(cleanImage, dsize = (width*2, height*2))
 cv2.imwrite(filename, cleanImage)
 
-pokemonDictionary, textRetrieved, realName = getPokemonCardName()
+#pokemonDictionary, textRetrieved, realName = getPokemonCardName()
 
-for i in range(0, len(pokemonDictionary)):
-    if pokemonDictionary[i] in textRetrieved:
-        realName = pokemonDictionary[i]
-        break
+realName = getCardName('PokemonCard')
 
-print 'Your card is a ' + realName
+#if realName == '':
+#    trainerCardDictionary, realName = getTrainerCardName()
+#
+#    for i in range(0, len(trainerCardDictionary)):
+#        if trainerCardDictionary[i] in textRetrieved:
+#            realName = trainerCardDictionary[i]
+#            break
+#
+#    print 'Your card is ' + realName
 
 if realName == '':
-    trainerCardDictionary, realName = getTrainerCardName()
+    realName = getCardName('TrainerCard')
 
-    for i in range(0, len(trainerCardDictionary)):
-        if trainerCardDictionary[i] in textRetrieved:
-            realName = trainerCardDictionary[i]
-            break
-
-    print 'Your card is ' + realName
+print 'Your card is ' + realName
 
 #print(text)
 #print(text2)
