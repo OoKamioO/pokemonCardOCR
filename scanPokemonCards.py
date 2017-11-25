@@ -38,15 +38,11 @@ def applyThreshold2(imageG):
 
     return B
 
+#Checks for lines on the card to find out where the borders are
 def lineApply(image):
-    height, width = np.shape(image)[:2]
-
-    #lowY = height
-    #lowY2 = height
-    #lowY3 = 0
-    
     yAxisArray = []
 
+    #Hough Lines source documentation - https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_imgproc/py_houghlines/py_houghlines.html
     gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray,50,150,apertureSize = 3)
 
@@ -54,7 +50,6 @@ def lineApply(image):
 
     print lines
     print len(lines)
-
 
     for i in range(0, len(lines)):
         for rho,theta in lines[i]:
@@ -78,7 +73,7 @@ def lineApply(image):
                 yAxisArray.append(y1)
 
             #print x0, y0, x1, y1, x2, y2
-            #cv2.line(image,(x1,y1),(x2,y2),(0,0,255),2)
+            cv2.line(image,(x1,y1),(x2,y2),(0,0,255),2)
 
     yAxisArray.sort()
 
@@ -90,7 +85,16 @@ def lineApply(image):
     cv2.imwrite('houghlines3.png',image)
 
     #return lowY, highY
-    return yAxisArray[0], yAxisArray[2]
+    return yAxisArray[1], yAxisArray[2]
+
+def resizeCard(card):
+    height, width = np.shape(card)[:2]
+    height = height*2
+    width = width*2
+
+    card = cv2.resize(card, dsize = (width, height))
+
+    return height, width, card
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -101,11 +105,8 @@ args = vars(ap.parse_args())
 #Load the example image and convert it to grayscale
 card = cv2.imread(args["image"])
 
-height, width = np.shape(card)[:2]
-height = height*2
-width = width*2
-
-card = cv2.resize(card, dsize = (width, height))
+#Returns the adjusted height, width and new card upscaled
+height, width, card = resizeCard(card)
 
 #Pastes the top part of the image
 image2 = card[0: height/7, 0:width]
@@ -157,8 +158,33 @@ cv2.imwrite(filename, cleanImage)
 #image = Image.open(filename)
 
 text = pytesseract.image_to_string(Image.open(filename), lang = 'eng', config = 'pokemon')
-os.remove(filename)
-print(text)
+
+pokemonName = []
+
+pokemonDictionaryPath = open('pokemonNames.txt', 'r')
+
+with pokemonDictionaryPath as pokemon:
+    for line in pokemon:
+        pokemonName.append(line[:-1])
+
+pokemonDictionaryPath.close()
+
+#Encode text into bytes
+#See example 1 = https://docs.python.org/2.7/howto/unicode.html
+textRetrieved = u''.join(text).encode('utf-8').strip()
+
+print textRetrieved
+
+realName = ''
+
+for i in range(0, len(pokemonName)):
+    if pokemonName[i] in textRetrieved:
+        realName = pokemonName[i]
+        break
+
+print 'Your card is a ' + realName
+
+#print(text)
 #print(text2)
 
 cv2.imshow('Top Border', cleanImage)
